@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhatsApp Botu · Kontrol Paneli</title>
+<style>
+  :root{
+    --lacivert:#172033; --turuncu:#FF9900; --yesil:#25D366; --yesil-koyu:#128C4B;
+    --zemin:#F4F6FA; --kart:#FFFFFF; --cizgi:#E3E8F0; --yazi:#1C2433; --soluk:#6B7689;
+    --kirmizi:#E5484D; --sari:#F5A524; --mavi:#3E7BFA;
+    --balon-musteri:#FFFFFF; --balon-bot:#DCF8C6; --balon-sahip:#D6E8FF;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif;color:var(--yazi);background:var(--zemin);font-size:14px}
+  button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:8px 14px;font-weight:600}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .b-yesil{background:var(--yesil);color:#fff}.b-yesil:hover{background:var(--yesil-koyu)}
+  .b-turuncu{background:var(--turuncu);color:#1b1300}
+  .b-gri{background:#EDF0F5;color:var(--yazi)}.b-gri:hover{background:#E1E6EE}
+  .b-kirmizi{background:#FDECEC;color:var(--kirmizi)}
+  input,textarea{font:inherit;border:1px solid var(--cizgi);border-radius:8px;padding:9px 11px;outline:none;width:100%;background:#fff}
+  input:focus,textarea:focus{border-color:var(--mavi)}
+
+  header{height:60px;background:var(--lacivert);color:#fff;display:flex;align-items:center;gap:18px;padding:0 20px}
+  header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.2px}
+  header .durum{display:flex;align-items:center;gap:8px;font-size:13px;opacity:.95}
+  .nokta{width:9px;height:9px;border-radius:50%;background:#888;display:inline-block}
+  .nokta.ok{background:var(--yesil);box-shadow:0 0 0 3px rgba(37,211,102,.25)}
+  .nokta.dur{background:var(--sari)}.nokta.yok{background:var(--kirmizi)}
+  header .bosluk{flex:1}
+  header .ist{display:flex;gap:16px;font-size:13px}
+  header .ist b{font-size:15px;color:var(--turuncu)}
+  .anahtar{display:flex;align-items:center;gap:8px;font-size:13px}
+  .switch{width:42px;height:24px;border-radius:12px;background:#4a5468;position:relative;cursor:pointer;transition:.15s}
+  .switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
+  .switch.acik{background:var(--yesil)}.switch.acik::after{left:21px}
+
+  main{display:grid;grid-template-columns:340px 1fr 320px;height:calc(100% - 60px)}
+  aside,section{overflow:hidden;display:flex;flex-direction:column}
+  .sol{border-right:1px solid var(--cizgi);background:var(--kart)}
+  .sag{border-left:1px solid var(--cizgi);background:var(--kart)}
+  .ust{padding:14px;border-bottom:1px solid var(--cizgi);display:flex;flex-direction:column;gap:10px}
+  .filtreler{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{padding:5px 10px;border-radius:20px;background:#EDF0F5;font-size:12px;font-weight:600;cursor:pointer;color:var(--soluk)}
+  .chip.secili{background:var(--lacivert);color:#fff}
+  .liste{overflow-y:auto;flex:1}
+  .kisi{padding:12px 14px;border-bottom:1px solid #F0F2F6;cursor:pointer;display:flex;gap:11px;align-items:flex-start}
+  .kisi:hover{background:#F8FAFC}.kisi.secili{background:#EEF4FF}
+  .avatar{width:38px;height:38px;border-radius:50%;background:#E6EBF3;color:var(--lacivert);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:13px}
+  .kisi .ic{flex:1;min-width:0}
+  .kisi .ad{font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kisi .son{color:var(--soluk);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .kisi .zaman{font-size:11px;color:var(--soluk);white-space:nowrap}
+  .rozet{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:10px;margin-top:5px;margin-right:4px}
+  .r-yeni{background:#EEF1F6;color:#5b667a}.r-bekliyor{background:#FFF4E0;color:#A86400}.r-kuyruk{background:#E7F0FF;color:#2559C7}
+  .r-bilgi{background:#E8F8EF;color:#128C4B}.r-arama{background:#FFF0D6;color:#B35F00}.r-dusunuyor{background:#F1ECFF;color:#6B4BC9}
+  .r-devredildi{background:#FDECEC;color:#C0282E}.r-uygun{background:#F2F2F2;color:#777}.r-dur{background:#FFF7CC;color:#8A6D00}
+
+  .orta{background:#EFEAE2;position:relative}
+  .bos{margin:auto;text-align:center;color:var(--soluk);max-width:360px;line-height:1.6}
+  .bos .ikon{font-size:42px;margin-bottom:8px}
+  .sohbet-ust{background:var(--kart);padding:12px 18px;border-bottom:1px solid var(--cizgi);display:flex;align-items:center;gap:12px}
+  .sohbet-ust .ad{font-weight:700;font-size:15px}
+  .sohbet-ust .tel{font-size:12.5px;color:var(--soluk)}
+  .sohbet-ust .islemler{margin-left:auto;display:flex;gap:8px}
+  .mesajlar{flex:1;overflow-y:auto;padding:18px 7%;display:flex;flex-direction:column;gap:6px}
+  .balon{max-width:72%;padding:8px 11px 6px;border-radius:9px;box-shadow:0 1px .5px rgba(0,0,0,.13);white-space:pre-wrap;word-wrap:break-word;line-height:1.42}
+  .balon .alt{font-size:10.5px;color:#7a8291;text-align:right;margin-top:3px}
+  .m-musteri{background:var(--balon-musteri);align-self:flex-start;border-top-left-radius:2px}
+  .m-bot{background:var(--balon-bot);align-self:flex-end;border-top-right-radius:2px}
+  .m-sahip{background:var(--balon-sahip);align-self:flex-end;border-top-right-radius:2px}
+  .gun{align-self:center;background:#E1F2FB;color:#4c5a6b;font-size:11.5px;padding:4px 10px;border-radius:7px;margin:8px 0}
+  .yaz{background:#F0F2F5;padding:10px 14px;display:flex;gap:10px;align-items:flex-end;border-top:1px solid var(--cizgi)}
+  .yaz textarea{resize:none;height:44px;max-height:140px}
+  .yaz .not{font-size:11.5px;color:var(--soluk);margin-top:4px}
+
+  .panel-baslik{padding:14px 16px 8px;font-size:12px;font-weight:700;color:var(--soluk);text-transform:uppercase;letter-spacing:.6px}
+  .form-bilgi{padding:0 16px 12px;display:flex;flex-direction:column;gap:8px}
+  .form-bilgi .satir{background:#F7F9FC;border-radius:8px;padding:8px 10px}
+  .form-bilgi .k{font-size:11px;color:var(--soluk);margin-bottom:2px}
+  .bildirimler{overflow-y:auto;flex:1;padding:0 12px 12px;display:flex;flex-direction:column;gap:8px}
+  .bildirim{background:#F7F9FC;border-radius:9px;padding:9px 11px;font-size:12.8px;white-space:pre-wrap;line-height:1.45;border-left:3px solid var(--turuncu);cursor:pointer}
+  .bildirim .z{font-size:10.5px;color:var(--soluk);margin-bottom:3px}
+  .ayrac{height:1px;background:var(--cizgi);margin:4px 0}
+
+  .modal-arka{position:fixed;inset:0;background:rgba(15,20,35,.45);display:none;align-items:center;justify-content:center;z-index:10}
+  .modal-arka.acik{display:flex}
+  .modal{background:#fff;border-radius:14px;padding:22px;width:400px;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+  .modal h3{margin:0;font-size:16px}
+  .modal p{margin:0;color:var(--soluk);line-height:1.5}
+  .modal .bt{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--lacivert);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.2s;pointer-events:none;z-index:20}
+  .toast.acik{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>💬 WhatsApp Müşteri Botu</h1>
+  <div class="durum"><span id="baglanti" class="nokta"></span><span id="baglantiYazi">Bağlanıyor…</span></div>
+  <div class="anahtar"><div id="botAnahtar" class="switch" title="Botu aç / kapat"></div><span id="botYazi">Bot</span></div>
+  <div class="bosluk"></div>
+  <div class="ist">
+    <span>Müşteri <b id="iToplam">0</b></span>
+    <span>Bekleyen ilk mesaj <b id="iBekleyen">0</b></span>
+    <span>Sırada <b id="iKuyruk">0</b></span>
+    <span>Arama bekleyen <b id="iArama">0</b></span>
+  </div>
+  <button class="b-gri" id="metaBtn" title="Facebook/Instagram formunu dolduranları çeker (otomatik olarak 2 saatte bir de çalışır)">📋 Facebook formlarını çek</button>
+  <button class="b-gri" id="taraBtn" title="WhatsApp sohbetlerine bakıp kimlerle zaten yazıştığınızı bulur">🔎 Sohbetleri tara</button>
+  <button class="b-turuncu" id="hepsiBtn">İlk mesajları başlat</button>
+</header>
+
+<main>
+  <aside class="sol">
+    <div class="ust">
+      <div style="display:flex;gap:8px">
+        <input id="ara" placeholder="İsim veya numara ara…">
+        <button class="b-gri" id="ekleBtn" title="Müşteri ekle">＋</button>
+      </div>
+      <div class="filtreler" id="filtreler"></div>
+    </div>
+    <div class="liste" id="liste"></div>
+  </aside>
+
+  <section class="orta" id="orta">
+    <div class="bos"><div class="ikon">💬</div>Soldan bir müşteri seçin.<br>Botun ve sizin yazdığınız tüm mesajlar burada görünür.</div>
+  </section>
+
+  <aside class="sag">
+    <div id="detay"></div>
+    <div class="panel-baslik">Bildirimler</div>
+    <div class="bildirimler" id="bildirimler"></div>
+  </aside>
+</main>
+
+<div class="modal-arka" id="modal"><div class="modal" id="modalIc"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DURUM = {
+  yeni:{ad:'Yeni',s:'r-yeni'}, bilgi_toplaniyor:{ad:'Yazışılıyor',s:'r-bilgi'}, arama_bekleniyor:{ad:'Arama bekliyor',s:'r-arama'},
+  dusunuyor:{ad:'Düşünüyor',s:'r-dusunuyor'}, uygun_degil:{ad:'Uygun değil',s:'r-uygun'}, devredildi:{ad:'Size devredildi',s:'r-devredildi'}
+};
+const FILTRE = [['hepsi','Hepsi'],['bekliyor','İlk mesaj bekliyor'],['yazisma','Yazışılıyor'],['arama_bekleniyor','Arama bekliyor'],['devredildi','Devredildi'],['dur','Bot durdu']];
+let veri = null, secili = null, filtre = 'hepsi', sohbetImza = '';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const telGoster = (t) => t.startsWith('90') && t.length === 12 ? `+90 ${t.slice(2,5)} ${t.slice(5,8)} ${t.slice(8,10)} ${t.slice(10)}` : '+' + t;
+const bas = (ad) => (ad || '?').trim().split(/\s+/).slice(0,2).map((x) => x[0]).join('').toUpperCase() || '?';
+function zaman(z, uzun) {
+  if (!z) return ''; const d = new Date(z), n = new Date();
+  const saat = d.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+  if (d.toDateString() === n.toDateString()) return saat;
+  const dun = new Date(n); dun.setDate(n.getDate() - 1);
+  if (d.toDateString() === dun.toDateString()) return uzun ? 'Dün ' + saat : 'Dün';
+  return d.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit'}) + (uzun ? ' ' + saat : '');
+}
+function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('acik'); clearTimeout(t._z); t._z = setTimeout(() => t.classList.remove('acik'), 2600); }
+async function api(yol, govde) {
+  const r = await fetch(yol, govde === undefined ? {} : {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(govde)});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.hata || 'Hata');
+  return j;
+}
+function modal(html) { $('modalIc').innerHTML = html; $('modal').classList.add('acik'); }
+function modalKapat() { $('modal').classList.remove('acik'); }
+$('modal').onclick = (e) => { if (e.target.id === 'modal') modalKapat(); };
+
+function rozetler(m) {
+  let r = '';
+  if (m.kuyrukta) r += '<span class="rozet r-kuyruk">Sırada</span>';
+  else if (m.ilkMesajBekliyor) r += '<span class="rozet r-bekliyor">İlk mesaj bekliyor</span>';
+  else { const d = DURUM[m.durum] || DURUM.yeni; r += `<span class="rozet ${d.s}">${d.ad}</span>`; }
+  if (m.duraklatildi) r += m.sizIlgileniyorsunuz ? '<span class="rozet r-dur">Siz ilgileniyorsunuz</span>' : '<span class="rozet r-dur">Bot durdu</span>';
+  return r;
+}
+function filtreUygun(m) {
+  if (filtre === 'bekliyor') return m.ilkMesajBekliyor;
+  if (filtre === 'yazisma') return m.mesajSayisi > 0 && !m.duraklatildi && m.durum !== 'devredildi';
+  if (filtre === 'dur') return m.duraklatildi;
+  if (filtre === 'hepsi') return true;
+  return m.durum === filtre;
+}
+
+function ciz() {
+  if (!veri) return;
+  const b = $('baglanti');
+  b.className = 'nokta ' + (!veri.hazir ? 'yok' : veri.aktif ? 'ok' : 'dur');
+  $('baglantiYazi').textContent = !veri.hazir ? 'WhatsApp bağlı değil' : `Bağlı · ${telGoster(veri.benimNo)}`;
+  $('botAnahtar').className = 'switch' + (veri.aktif ? ' acik' : '');
+  $('botYazi').textContent = veri.aktif ? 'Bot açık' : 'Bot kapalı';
+  const ms = veri.musteriler;
+  $('iToplam').textContent = ms.length;
+  $('iBekleyen').textContent = ms.filter((m) => m.ilkMesajBekliyor && !m.kuyrukta).length;
+  $('iKuyruk').textContent = veri.kuyruk;
+  $('iArama').textContent = ms.filter((m) => m.durum === 'arama_bekleniyor').length;
+  $('hepsiBtn').disabled = !ms.some((m) => m.ilkMesajBekliyor && !m.kuyrukta);
+  $('metaBtn').title = veri.metaBagli ? `Son çekim: ${veri.sonMetaCekim ? zaman(veri.sonMetaCekim, true) : 'henüz yok'} (2 saatte bir otomatik)` : 'Facebook bağlantısı kurulmamış';
+
+  $('filtreler').innerHTML = FILTRE.map(([k, a]) => {
+    const n = k === 'hepsi' ? ms.length : ms.filter((m) => { const f = filtre; filtre = k; const u = filtreUygun(m); filtre = f; return u; }).length;
+    return `<span class="chip ${filtre === k ? 'secili' : ''}" data-f="${k}">${a} ${n}</span>`;
+  }).join('');
+  document.querySelectorAll('.chip').forEach((c) => c.onclick = () => { filtre = c.dataset.f; ciz(); });
+
+  const q = $('ara').value.trim().toLocaleLowerCase('tr');
+  const liste = ms.filter(filtreUygun).filter((m) => !q || (m.ad || '').toLocaleLowerCase('tr').includes(q) || m.telefon.includes(q.replace(/\D/g, '') || '~'));
+  $('liste').innerHTML = liste.map((m) => {
+    const son = m.sonMesaj ? (m.sonMesaj.rol === 'musteri' ? '' : m.sonMesaj.rol === 'bot' ? '🤖 ' : 'Siz: ') + m.sonMesaj.metin : (m.form?.form_tarihi ? 'Form: ' + m.form.form_tarihi : 'Henüz yazışma yok');
+    return `<div class="kisi ${secili === m.telefon ? 'secili' : ''}" data-t="${m.telefon}">
+      <div class="avatar">${esc(bas(m.ad))}</div>
+      <div class="ic"><div class="ad">${esc(m.ad || telGoster(m.telefon))}</div><div class="son">${esc(son)}</div>${rozetler(m)}</div>
+      <div class="zaman">${zaman(m.sonMesaj?.zaman)}</div></div>`;
+  }).join('') || '<div class="bos" style="padding:30px">Bu filtrede müşteri yok</div>';
+  document.querySelectorAll('.kisi').forEach((k) => k.onclick = () => { secili = k.dataset.t; sohbetImza = ''; ciz(); sohbetYukle(); });
+
+  $('bildirimler').innerHTML = veri.bildirimler.map((n) =>
+    `<div class="bildirim" data-t="${n.tel || ''}"><div class="z">${zaman(n.zaman, true)}</div>${esc(n.metin)}</div>`).join('') || '<div style="color:var(--soluk);padding:8px 4px">Henüz bildirim yok</div>';
+  document.querySelectorAll('.bildirim').forEach((b) => b.onclick = () => { if (b.dataset.t) { secili = b.dataset.t; sohbetImza = ''; ciz(); sohbetYukle(); } });
+  detayCiz();
+}
+
+function detayCiz() {
+  const m = veri?.musteriler.find((x) => x.telefon === secili);
+  if (!m) { $('detay').innerHTML = ''; return; }
+  const alanlar = Object.entries(m.form || {}).filter(([k]) => !['ad'].includes(k));
+  const etiket = (k) => ({form_tarihi:'Form tarihi', e_ticaret_deneyimi:'E-ticaret deneyimi', butce:'Bütçe', kaynak:'Kaynak', not:'Not', form_cevaplari:'Form cevapları'}[k] || k);
+  $('detay').innerHTML = `<div class="panel-baslik">Form bilgileri</div><div class="form-bilgi">
+    ${alanlar.map(([k, v]) => `<div class="satir"><div class="k">${esc(etiket(k))}</div>${esc(v)}</div>`).join('') || '<div style="color:var(--soluk)">Form bilgisi yok</div>'}
+    </div><div class="ayrac"></div>`;
+}
+
+async function sohbetYukle() {
+  if (!secili) return;
+  let s;
+  try { s = await api('/api/musteri/' + secili); } catch (e) { return; }
+  const imza = s.gecmis.length + '|' + s.duraklatildi + '|' + s.kuyrukta + '|' + s.ilkMesajBekliyor + '|' + s.durum;
+  if (imza === sohbetImza) return; sohbetImza = imza;
+  const orta = $('orta');
+  const altta = !orta.querySelector('.mesajlar') || (() => { const x = orta.querySelector('.mesajlar'); return x.scrollHeight - x.scrollTop - x.clientHeight < 80; })();
+  const taslak = orta.querySelector('textarea')?.value || '';
+  let son = '', mesajHtml = '';
+  for (const g of s.gecmis) {
+    const gun = new Date(g.zaman).toLocaleDateString('tr-TR', {day:'numeric', month:'long', weekday:'long'});
+    if (gun !== son) { mesajHtml += `<div class="gun">${gun}</div>`; son = gun; }
+    const kim = g.rol === 'bot' ? '🤖 Bot' : g.rol === 'sahip' ? '👤 Siz' : '';
+    mesajHtml += `<div class="balon m-${g.rol}">${esc(g.metin)}<div class="alt">${kim ? kim + ' · ' : ''}${new Date(g.zaman).toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'})}</div></div>`;
+  }
+  if (!s.gecmis.length) mesajHtml = `<div class="bos"><div class="ikon">✉️</div>Henüz yazışma yok.${s.ilkMesajBekliyor ? '<br>Bot ilk mesajı onayınızla atar.' : ''}</div>`;
+
+  const ilkBtn = !s.gecmis.length
+    ? (s.kuyrukta ? `<button class="b-gri" id="iptalBtn">Sıradan çıkar</button>` : `<button class="b-yesil" id="ilkBtn">🤖 Bot ilk mesajı atsın</button>`) : '';
+  orta.innerHTML = `
+    <div class="sohbet-ust">
+      <div class="avatar">${esc(bas(s.ad))}</div>
+      <div><div class="ad">${esc(s.ad || telGoster(s.telefon))}</div><div class="tel">${telGoster(s.telefon)} · ${rozetler(s)}</div></div>
+      <div class="islemler">${ilkBtn}
+        <button class="${s.duraklatildi ? 'b-yesil' : 'b-kirmizi'}" id="durBtn">${s.duraklatildi ? '▶️ Botu bu kişide aç' : '⏸️ Botu bu kişide durdur'}</button>
+      </div>
+    </div>
+    <div class="mesajlar" id="mesajlar">${mesajHtml}</div>
+    <div class="yaz">
+      <div style="flex:1"><textarea id="metin" placeholder="Kendiniz yazın (Enter: gönder, Shift+Enter: alt satır)">${esc(taslak)}</textarea>
+      <div class="not">Buradan gönderdiğiniz mesaj sizin adınıza gider ve bot bu kişide durur.</div></div>
+      <button class="b-yesil" id="gonderBtn">Gönder</button>
+    </div>`;
+  const ml = $('mesajlar'); if (altta) ml.scrollTop = ml.scrollHeight;
+
+  $('durBtn').onclick = async () => { await api(`/api/musteri/${s.telefon}/duraklat`, {deger: !s.duraklatildi}); toast(s.duraklatildi ? 'Bot bu kişide tekrar açık' : 'Bot bu kişide durdu'); yenile(); };
+  if ($('ilkBtn')) $('ilkBtn').onclick = async () => { try { await api(`/api/musteri/${s.telefon}/ilkmesaj`, {}); toast('Sıraya alındı, bot birazdan yazacak'); yenile(); } catch (e) { toast(e.message); } };
+  if ($('iptalBtn')) $('iptalBtn').onclick = async () => { await api(`/api/musteri/${s.telefon}/iptal`, {}); toast('Sıradan çıkarıldı'); yenile(); };
+  const gonder = async () => {
+    const t = $('metin').value.trim(); if (!t) return;
+    $('gonderBtn').disabled = true;
+    try { await api(`/api/musteri/${s.telefon}/mesaj`, {metin: t}); $('metin').value = ''; sohbetImza = ''; toast('Gönderildi'); yenile(); }
+    catch (e) { toast(e.message); } finally { $('gonderBtn').disabled = false; }
+  };
+  $('gonderBtn').onclick = gonder;
+  $('metin').onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); gonder(); } };
+}
+
+async function yenile() {
+  try { veri = await api('/api/durum'); ciz(); if (secili) sohbetYukle(); }
+  catch { $('baglanti').className = 'nokta yok'; $('baglantiYazi').textContent = 'Bot kapalı (Terminal penceresi açık mı?)'; }
+}
+
+$('ara').oninput = ciz;
+$('botAnahtar').onclick = async () => {
+  if (veri.aktif) {
+    modal(`<h3>Botu durdur?</h3><p>Bot kimseye cevap vermez ve ilk mesaj göndermez. Gelen mesajlar kaydedilmeye devam eder.</p>
+      <div class="bt"><button class="b-gri" onclick="modalKapat()">Vazgeç</button><button class="b-kirmizi" id="evet">Durdur</button></div>`);
+    $('evet').onclick = async () => { await api('/api/bot', {aktif:false}); modalKapat(); toast('Bot durduruldu'); yenile(); };
+  } else { await api('/api/bot', {aktif:true}); toast('Bot açıldı'); yenile(); }
+};
+$('metaBtn').onclick = async () => {
+  $('metaBtn').disabled = true; toast('Facebook form başvuruları çekiliyor…');
+  try { const r = await api('/api/meta-cek', {}); toast(r.yeni ? `${r.yeni} yeni başvuru eklendi` : 'Yeni başvuru yok'); yenile(); }
+  catch (e) { toast(e.message); } finally { $('metaBtn').disabled = false; }
+};
+$('taraBtn').onclick = async () => {
+  $('taraBtn').disabled = true; toast('Sohbetler taranıyor, biraz sürebilir…');
+  try { const r = await api('/api/tara', {}); toast(`Bitti: ${r.siz} kişiyle zaten yazışmışsınız, ${r.bot} kişiye bot cevap verecek, ${r.bekleyen} kişiyle hiç yazışma yok`); yenile(); }
+  catch (e) { toast(e.message); } finally { $('taraBtn').disabled = false; }
+};
+$('hepsiBtn').onclick = () => {
+  const n = veri.musteriler.filter((m) => m.ilkMesajBekliyor && !m.kuyrukta).length;
+  modal(`<h3>${n} kişiye ilk mesaj gönderilsin mi?</h3>
+    <p>Bot formu dolduran bu kişilere sizin üslubunuzla ilk mesajı atar. Toplu mesaj gibi görünmemesi için <b>her ${veri.ilkMesajAralikDk} dakikada bir</b> kişiye yazar (toplam ~${n * veri.ilkMesajAralikDk} dk). ${veri.saatler ? `Sadece ${veri.saatler} arası gönderir.` : ''}</p>
+    <div class="bt"><button class="b-gri" onclick="modalKapat()">Vazgeç</button><button class="b-yesil" id="evet">Başlat</button></div>`);
+  $('evet').onclick = async () => { const r = await api('/api/ilkmesaj-hepsi', {}); modalKapat(); toast(`${r.sayi} kişi sıraya alındı`); yenile(); };
+};
+$('ekleBtn').onclick = () => {
+  modal(`<h3>Müşteri ekle</h3><input id="yAd" placeholder="Ad Soyad"><input id="yTel" placeholder="Telefon (ör. 0532 111 22 33)">
+    <p style="font-size:12.5px">Eklenen kişiye ilk mesaj otomatik gitmez; isterseniz sohbetinden "Bot ilk mesajı atsın" diyebilirsiniz.</p>
+    <div class="bt"><button class="b-gri" onclick="modalKapat()">Vazgeç</button><button class="b-yesil" id="evet">Ekle</button></div>`);
+  $('yAd').focus();
+  $('evet').onclick = async () => {
+    try { const r = await api('/api/musteri-ekle', {ad: $('yAd').value, telefon: $('yTel').value}); modalKapat(); secili = r.telefon; sohbetImza = ''; toast('Eklendi'); yenile(); }
+    catch (e) { toast(e.message); }
+  };
+};
+
+yenile();
+setInterval(yenile, 3000);
+</script>
+</body>
+</html>

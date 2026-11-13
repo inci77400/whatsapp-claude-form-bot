@@ -1,0 +1,13 @@
+node_modules/
+.node/
+.env
+.wwebjs_cache/
+.wwebjs_auth/
+# Müşteri verileri, WhatsApp oturumu, loglar — ASLA paylaşmayın
+veri/*
+!veri/.gitkeep
+# Kendi işletmenize göre düzenlediğiniz prompt
+prompt/sistem.md
+*.tgz
+*.log
+.DS_Store
